@@ -1,0 +1,6 @@
+#these are right now requirements will be changed as per project
+
+fastapi
+uvicorn
+pytest
+requests
