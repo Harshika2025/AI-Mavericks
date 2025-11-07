@@ -1,0 +1,2 @@
+user_id,product_id,event_type,timestamp,eventhub,ingested_at
+u123,p456,view,2025-01-01T12:00:00Z,ai_mavericks.view,2025-10-25T05:14:39.344702

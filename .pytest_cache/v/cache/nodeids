@@ -1,0 +1,6 @@
+[
+  "tests/test_pipeline_basic.py::test_offline_metrics_file_creation",
+  "tests/test_pipeline_basic.py::test_parquet_files_exist",
+  "tests/test_pipeline_basic.py::test_safe_mean_valid_values",
+  "tests/test_pipeline_basic.py::test_safe_mean_with_nans"
+]
