@@ -1,6 +1,4 @@
-#CI/CD pipeline for testing, building Docker image, and pushing to Docker Hub.
-
-name: CI/CD Pipeline
+name: CI/CD Product Trend Tracker
 
 on:
   push:
@@ -23,11 +21,21 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -r service/requirements.txt
+        pip install -r product-trend-tracker/requirements.txt
+        pip install pytest pytest-cov
 
-    - name: Run tests
+    - name: Run tests with coverage
       run: |
-        pytest -v --disable-warnings
+        cd product-trend-tracker
+        pytest --maxfail=1 --disable-warnings -q --cov=. --cov-report=term-missing
+        pytest --cov=. --cov-report=xml
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: product-trend-tracker/.pytest_cache/
 
     - name: Build Docker image
       run: |
