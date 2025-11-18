@@ -1,0 +1,8 @@
+{
+    "version": "v1.1",
+    "trained_at": "2025-11-18T23:33:38.017364Z",
+    "data_snapshot_id": "unknown_snapshot",
+    "pipeline_git_sha": "local-dev",
+    "num_products": 1,
+    "model_type": "popularity_weighted"
+}

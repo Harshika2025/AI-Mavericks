@@ -1,0 +1,10 @@
+*.parquet
+*.csv
+snapshots_downloaded/
+venv/
+__pycache__/
+*.png
+*.pdf
+*.jpg
+htmlcov/
+tests/

@@ -1,0 +1,41 @@
+	# =========================
+# 1) BUILDER STAGE
+# =========================
+FROM python:3.10-slim-bookworm AS builder
+# Install required system packages for venv + building scientific libs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-venv \
+    python3-dev \
+    build-essential \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --upgrade pip \
+    && /opt/venv/bin/pip install --no-cache-dir --only-binary=:all: -r requirements.txt
+
+# =========================
+# 2) RUNTIME STAGE (SMALL)
+# =========================
+FROM python:3.10-slim-bookworm AS runtime
+# Install only runtime libs
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libstdc++6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy only the site-packages and binary scripts
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+WORKDIR /app
+
+# Copy only app files
+COPY recommender_api.py .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "recommender_api:app", "--host", "0.0.0.0", "--port", "8000"]
