@@ -1,0 +1,7 @@
+#Dependencies for FastAPI and testing.
+#Requirements changes as per the project
+
+fastapi
+uvicorn
+pytest
+requests
