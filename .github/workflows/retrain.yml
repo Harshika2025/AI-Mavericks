@@ -1,9 +1,9 @@
-name: Automated Retraining
+name: Auto Retrain & Publish
 
 on:
   schedule:
-    - cron: "0 */12 * * *"   # Runs every 12 hours (2+ versions per week guaranteed)
-  workflow_dispatch:          # Also allows manual trigger
+    - cron: "0 */12 * * *"   # runs every 12 hours
+  workflow_dispatch:          # allow manual run from the UI
 
 jobs:
   retrain:
@@ -24,11 +24,11 @@ jobs:
         pip install -r requirements.txt
         pip install pyarrow joblib pandas
 
-    - name: Run retraining
+    - name: Run retraining script
       run: |
-        python retrain_and_publish.py
+        python product_trend_tracker/retrain_and_publish.py
 
-    - name: Upload model registry as artifact (optional)
+    - name: Upload model registry as artifact
       uses: actions/upload-artifact@v3
       with:
         name: model_registry
