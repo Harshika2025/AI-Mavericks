@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python 3.12
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
@@ -26,7 +26,11 @@ jobs:
           pip install pytest pytest-cov httpx pyarrow
 
       - name: Run tests
-        run: pytest --cov=. --cov-report=html
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          echo "PYTHONPATH = $PYTHONPATH"
+          pytest --maxfail=1 --disable-warnings --cov=. --cov-report=html
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
@@ -48,5 +52,6 @@ jobs:
         run: |
           USER_LC="${GITHUB_ACTOR,,}"
           echo "Using GHCR namespace: $USER_LC"
-          docker tag product-trend-tracker:${{ github.sha }} ghcr.io/$USER_LC/product-trend-tracker:${{ github.sha }}
+          docker tag product-trend-tracker:${{ github.sha }} \
+            ghcr.io/$USER_LC/product-trend-tracker:${{ github.sha }}
           docker push ghcr.io/$USER_LC/product-trend-tracker:${{ github.sha }}
