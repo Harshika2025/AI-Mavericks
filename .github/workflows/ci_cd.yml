@@ -1,9 +1,5 @@
 name: CI/CD ProductTrendTracker
 
-permissions:
-  contents: read
-  packages: write
-
 on:
   push:
     branches: [ main ]
@@ -14,42 +10,48 @@ jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: product-trend-tracker
-
     steps:
+      # Step 1 — Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Step 2 — Set up Python
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
+      # Step 3 — Install dependencies inside product-trend-tracker folder
       - name: Install dependencies
+        working-directory: product-trend-tracker
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-cov httpx pyarrow
 
+      # Step 4 — Run tests + coverage
       - name: Run tests
+        working-directory: product-trend-tracker
         run: |
           export PYTHONPATH=$PYTHONPATH:$(pwd)
           pytest --cov=. --cov-report=xml --cov-report=term-missing
           pytest --cov=. --cov-report=html
 
+      # Step 5 — Upload coverage report
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: product-trend-tracker/htmlcov/
 
+      # Step 6 — Build Docker image
       - name: Build Docker image
         if: ${{ hashFiles('Dockerfile') != '' }}
-        working-directory: .
-        run: docker build -t product-trend-tracker:${{ github.sha }} .
+        working-directory: product-trend-tracker
+        run: |
+          docker build -t product-trend-tracker:${{ github.sha }} .
 
+      # Step 7 — Login to GHCR
       - name: Login to GHCR
         if: ${{ hashFiles('Dockerfile') != '' }}
         uses: docker/login-action@v3
@@ -58,10 +60,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Step 8 — Push Docker image
       - name: Push Docker image
         if: ${{ hashFiles('Dockerfile') != '' }}
-        working-directory: .
+        working-directory: product-trend-tracker
         run: |
           USER_LC="${GITHUB_ACTOR,,}"
+          REPO_LC="${GITHUB_REPOSITORY,,}"
+
+          echo "Using GHCR namespace: $USER_LC"
+          echo "Repository: $REPO_LC"
+
           docker tag product-trend-tracker:${{ github.sha }} ghcr.io/$USER_LC/product-trend-tracker:${{ github.sha }}
           docker push ghcr.io/$USER_LC/product-trend-tracker:${{ github.sha }}
