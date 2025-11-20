@@ -6,3 +6,4 @@ uvicorn
 joblib
 prometheus-client
 httpx
+matplotlib
