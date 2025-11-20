@@ -1,0 +1,7 @@
+{
+    "model_version": "v1.2",
+    "trained_at": "2025-11-20T01:33:52.897381Z",
+    "data_snapshot_id": "purchase_snapshot.parquet",
+    "pipeline_git_sha": "50b0d82760bf59f341fb48c3f6530b4ae82e92b5",
+    "model_type": "popularity_weighted"
+}
