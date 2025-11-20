@@ -15,17 +15,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Step 2: Set up Python
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         working-directory: product-trend-tracker
         run: |
@@ -33,7 +30,6 @@ jobs:
           pip install -r requirements.txt
           pip install pytest pytest-cov httpx pyarrow
 
-      # Step 4: Run tests
       - name: Run tests
         working-directory: product-trend-tracker
         run: |
@@ -42,19 +38,16 @@ jobs:
           pytest --cov=. --cov-report=xml
           pytest --cov=. --cov-report=html
 
-      # Step 5: Upload coverage
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: product-trend-tracker/htmlcov/
 
-      # Step 6: Build Docker image
       - name: Build Docker image
         if: ${{ hashFiles('Dockerfile') != '' }}
         run: docker build -t product-trend-tracker:${{ github.sha }} .
 
-      # Step 7: Login to GHCR
       - name: Login to GHCR
         if: ${{ hashFiles('Dockerfile') != '' }}
         uses: docker/login-action@v3
@@ -63,15 +56,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 8: Push image
       - name: Push Docker image
         if: ${{ hashFiles('Dockerfile') != '' }}
         run: |
           ORG="harshika2025"
           IMG="product-trend-tracker"
           TAG="${{ github.sha }}"
-
-          echo "Pushing to ghcr.io/$ORG/$IMG:$TAG"
 
           docker tag product-trend-tracker:$TAG ghcr.io/$ORG/$IMG:$TAG
           docker push ghcr.io/$ORG/$IMG:$TAG
