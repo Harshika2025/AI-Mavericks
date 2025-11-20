@@ -25,10 +25,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r product-trend-tracker/requirements.txt
+          pip install -r requirements.txt
           pip install pytest pytest-cov httpx pyarrow
 
-      # Step 4: Run tests from correct directory
+      # Step 4: Run tests (inside correct directory)
       - name: Run tests
         working-directory: product-trend-tracker
         run: |
@@ -42,12 +42,12 @@ jobs:
           name: coverage-report
           path: product-trend-tracker/htmlcov/
 
-      # Step 6: Build Docker image (if Dockerfile exists)
+      # Step 6: Build Docker image
       - name: Build Docker image
         if: ${{ hashFiles('Dockerfile') != '' }}
         run: docker build -t product-trend-tracker:${{ github.sha }} .
 
-      # Step 7: Login to GitHub Container Registry
+      # Step 7: Login to GHCR
       - name: Login to GHCR
         if: ${{ hashFiles('Dockerfile') != '' }}
         uses: docker/login-action@v3
@@ -60,7 +60,7 @@ jobs:
       - name: Push Docker image
         if: ${{ hashFiles('Dockerfile') != '' }}
         run: |
-          REPO_LC="${GITHUB_REPOSITORY,,}"       # lowercase repository (required by GHCR)
+          REPO_LC="${GITHUB_REPOSITORY,,}"
           echo "Using GHCR repo: $REPO_LC"
 
           docker tag product-trend-tracker:${{ github.sha }} ghcr.io/$REPO_LC/product-trend-tracker:${{ github.sha }}
