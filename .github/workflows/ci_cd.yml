@@ -15,6 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -59,9 +60,6 @@ jobs:
       - name: Push Docker image
         if: ${{ hashFiles('Dockerfile') != '' }}
         run: |
-          ORG="harshika2025"
-          IMG="product-trend-tracker"
-          TAG="${{ github.sha }}"
-
-          docker tag product-trend-tracker:$TAG ghcr.io/$ORG/$IMG:$TAG
-          docker push ghcr.io/$ORG/$IMG:$TAG
+          USER_LC="${GITHUB_ACTOR,,}"
+          docker tag product-trend-tracker:${{ github.sha }} ghcr.io/$USER_LC/product-trend-tracker:${{ github.sha }}
+          docker push ghcr.io/$USER_LC/product-trend-tracker:${{ github.sha }}
