@@ -5,3 +5,4 @@ fastapi
 uvicorn
 joblib
 prometheus-client
+httpx
