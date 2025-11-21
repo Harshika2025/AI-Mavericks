@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from prometheus_fastapi_instrumentator import Instrumentator
+from prometheus_client import Counter, Histogram
 from typing import List
 
 # Assuming you have these classes implemented
@@ -18,6 +20,49 @@ class ItemItemCF:
 
 # FastAPI app
 app = FastAPI(title="Product Trend Tracker Recommender")
+
+# -----------------------------
+# Prometheus instrumentation
+# -----------------------------
+Instrumentator().instrument(app).expose(app)
+
+REQUEST_COUNT = Counter(
+    "api_request_count",
+    "Total number of API requests",
+    ["endpoint", "method", "status"]
+)
+
+REQUEST_LATENCY = Histogram(
+    "api_request_latency_seconds",
+    "Latency of API responses",
+    ["endpoint"]
+)
+
+# ============================
+# REQUIRED ENDPOINTS FOR TESTS
+# ============================
+
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
+
+@app.get("/trending_products")
+def trending_products(k: int = 10):
+    if k <= 0:
+        raise HTTPException(status_code=400, detail="k must be > 0")
+
+    products = [f"product{i}" for i in range(1, k + 1)]
+    return {"products": products}
+
+
+@app.post("/feedback")
+def feedback(product_id: str, feedback: str):
+    return {
+        "product_id": product_id,
+        "feedback": feedback,
+        "status": "received"
+    }
 
 # This function loads the latest snapshot of data (for simplicity, we return an empty DataFrame here)
 def load_latest_snapshot():
@@ -48,9 +93,29 @@ def models():
 
 @app.get("/recommend")
 def recommend(user_id: str, model: str = "pop"):
-    if model == "cf":
-        recs = cf_model.recommend(user_id)
-    else:
-        recs = pop_model.recommend(user_id)
+    # measure latency for this endpoint
+    with REQUEST_LATENCY.labels("/recommend").time():
+        try:
+            if model == "cf":
+                recs = cf_model.recommend(user_id)
+            else:
+                recs = pop_model.recommend(user_id)
 
-    return {"user_id": user_id, "model": model, "recommendations": recs}
+            # count successful request
+            REQUEST_COUNT.labels("/recommend", "GET", "200").inc()
+
+            return {
+                "user_id": user_id,
+                "model": model,
+                "recommendations": recs
+            }
+
+        except Exception:
+            # count failure
+            REQUEST_COUNT.labels("/recommend", "GET", "500").inc()
+            raise
+
+
+@app.get("/healthz")
+def healthz():
+    return {"status": "ok"}

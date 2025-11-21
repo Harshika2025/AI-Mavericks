@@ -1,41 +1,48 @@
-	# =========================
+# =========================
 # 1) BUILDER STAGE
 # =========================
 FROM python:3.10-slim-bookworm AS builder
-# Install required system packages for venv + building scientific libs
+
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-venv \
     python3-dev \
     build-essential \
-    gcc \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
+# Copy requirements
 COPY requirements.txt .
 
+# Create venv + install deps
 RUN python3 -m venv /opt/venv \
     && /opt/venv/bin/pip install --upgrade pip \
-    && /opt/venv/bin/pip install --no-cache-dir --only-binary=:all: -r requirements.txt
+    && /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+
 
 # =========================
-# 2) RUNTIME STAGE (SMALL)
+# 2) RUNTIME STAGE
 # =========================
 FROM python:3.10-slim-bookworm AS runtime
-# Install only runtime libs
+
+# Runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy only the site-packages and binary scripts
+# Copy installed venv from builder
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-# Copy only app files
-COPY recommender_api.py .
+# Copy FULL project folder (THIS FIXES YOUR ISSUE)
+COPY product_trend_tracker ./product_trend_tracker
+COPY model_registry ./model_registry
 
 EXPOSE 8000
 
-CMD ["uvicorn", "recommender_api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Correct FastAPI app entry point
+CMD ["uvicorn", "product_trend_tracker.recommender_api:app", "--host", "0.0.0.0", "--port", "8000"]

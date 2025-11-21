@@ -1,108 +1,113 @@
 import os
 import json
-import glob
-from datetime import datetime
-import subprocess
-import joblib
 import pandas as pd
+from datetime import datetime
 
-from train_models import train_popularity_model, load_data   # your existing functions
+# ======================================================
+# IMPORT MODEL TRAINING FUNCTIONS FROM train_models.py
+# ======================================================
+from product_trend_tracker.train_models import train_popularity_model
 
-MODEL_REGISTRY = "model_registry"
 
-
-# ===============================
-# Helper: Auto-find latest snapshot
-# ===============================
+# ======================================================
+# 1. Find latest snapshot in snapshots_downloaded/
+# ======================================================
 def get_latest_snapshot():
-    files = glob.glob("*.parquet") + glob.glob("*.csv")
+    folder = "snapshots_downloaded"
+    if not os.path.exists(folder):
+        raise FileNotFoundError("snapshots_downloaded/ folder does not exist")
+
+    files = [
+        os.path.join(folder, f)
+        for f in os.listdir(folder)
+        if f.endswith(".csv") or f.endswith(".parquet")
+    ]
+
     if not files:
-        raise Exception("No snapshot files found!")
-    files.sort(key=os.path.getmtime, reverse=True)
-    return files[0]
+        raise FileNotFoundError("No snapshot files found in snapshots_downloaded/")
+
+    latest = max(files, key=os.path.getmtime)
+    return latest
 
 
-# ===============================
-# Helper: Auto-increment version
-# ===============================
+# ======================================================
+# 2. Create next version number
+# ======================================================
 def get_next_model_version():
-    versions = [d for d in os.listdir(MODEL_REGISTRY) if d.startswith("v")]
+    registry = "model_registry"
+    os.makedirs(registry, exist_ok=True)
+
+    versions = [
+        d for d in os.listdir(registry)
+        if d.startswith("v") and d[1:].isdigit()
+    ]
+
     if not versions:
-        return "v1.0"
+        return "v1"
 
-    versions.sort()
-    last = versions[-1]       # v1.1
-    major, minor = map(int, last[1:].split("."))
-    return f"v{major}.{minor + 1}"    # -> v1.2
+    numbers = [int(v[1:]) for v in versions]
+    next_num = max(numbers) + 1
 
-
-# ===============================
-# Helper: Git SHA for provenance
-# ===============================
-def get_git_sha():
-    try:
-        sha = subprocess.check_output(["git", "rev-parse", "HEAD"]).decode().strip()
-        return sha
-    except:
-        return "unknown"
+    return f"v{next_num}"
 
 
-# ===============================
-# Save model + metadata
-# ===============================
-def save_model_and_metadata(model, version, snapshot_name):
-    model_dir = os.path.join(MODEL_REGISTRY, version)
-    os.makedirs(model_dir, exist_ok=True)
+# ======================================================
+# 3. Save model and metadata
+# ======================================================
+def save_model_and_metadata(model_dict, version, snapshot_path):
+    save_dir = f"model_registry/{version}"
+    os.makedirs(save_dir, exist_ok=True)
 
     # Save model
-    model_path = os.path.join(model_dir, "model.joblib")
-    joblib.dump(model, model_path)
+    model_file = os.path.join(save_dir, "model.json")
+    with open(model_file, "w") as f:
+        json.dump(model_dict, f)
 
-    # Metadata
+    # Save metadata
     metadata = {
-        "model_version": version,
-        "trained_at": datetime.utcnow().isoformat() + "Z",
-        "data_snapshot_id": snapshot_name,
-        "pipeline_git_sha": get_git_sha(),
-        "model_type": "popularity_weighted",
+        "version": version,
+        "snapshot_used": snapshot_path,
+        "created_at": datetime.utcnow().isoformat()
     }
 
-    with open(os.path.join(model_dir, "metadata.json"), "w") as f:
-        json.dump(metadata, f, indent=4)
+    metadata_file = os.path.join(save_dir, "metadata.json")
+    with open(metadata_file, "w") as f:
+        json.dump(metadata, f, indent=2)
 
-    # Update latest.txt
-    with open(os.path.join(MODEL_REGISTRY, "latest.txt"), "w") as f:
-        f.write(version)
-
-    print(f"\nSaved {version} into model_registry/")
-    print("Model:", model_path)
-    print("Metadata:", os.path.join(model_dir, "metadata.json"))
-    print("Updated latest.txt\n")
+    print("✔ Model saved at:", model_file)
+    print("✔ Metadata saved at:", metadata_file)
 
 
-# ===============================
-# Main workflow
-# ===============================
+# ======================================================
+# 4. MAIN WORKFLOW
+# ======================================================
 def main():
     print("\n=== STEP 1: Finding latest snapshot ===")
     snapshot = get_latest_snapshot()
-    print("Snapshot used:", snapshot)
+    print("➡ Snapshot used:", snapshot)
 
     print("\n=== STEP 2: Loading snapshot ===")
-    df = pd.read_parquet(snapshot) if snapshot.endswith(".parquet") else pd.read_csv(snapshot)
+    if snapshot.endswith(".parquet"):
+        df = pd.read_parquet(snapshot)
+    else:
+        df = pd.read_csv(snapshot)
+    print("✔ Loaded:", len(df), "rows")
 
     print("\n=== STEP 3: Training model ===")
     model = train_popularity_model(df)
 
     print("\n=== STEP 4: Creating new version ===")
     version = get_next_model_version()
-    print("New version:", version)
+    print("New model version:", version)
 
     print("\n=== STEP 5: Saving new model ===")
     save_model_and_metadata(model, version, snapshot)
 
-    print("\nTraining + Publishing completed! 🚀\n")
+    print("\n Training + Publishing completed! \n")
 
 
+# ======================================================
+# Run script
+# ======================================================
 if __name__ == "__main__":
     main()

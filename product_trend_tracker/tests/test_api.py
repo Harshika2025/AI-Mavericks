@@ -1,7 +1,7 @@
-#Unit tests for API functionality
+# --- FIXED TEST FILE FOR YOUR PROJECT ---
 
 from fastapi.testclient import TestClient
-from service.app import app
+from product_trend_tracker.recommender_api import app
 
 client = TestClient(app)
 
@@ -27,6 +27,9 @@ def test_invalid_k_value():
     assert response.status_code == 400
 
 def test_feedback():
-    response = client.post("/feedback", params={"product_id": "P1", "feedback": "Great product!"})
+    response = client.post(
+        "/feedback",
+        params={"product_id": "P1", "feedback": "Great product!"}
+    )
     assert response.status_code == 200
     assert response.json()["product_id"] == "P1"

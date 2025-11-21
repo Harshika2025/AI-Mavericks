@@ -7,3 +7,5 @@ joblib
 prometheus-client
 httpx
 matplotlib
+prometheus-fastapi-instrumentator
+prometheus-client

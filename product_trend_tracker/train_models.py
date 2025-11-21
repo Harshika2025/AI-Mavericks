@@ -1,6 +1,30 @@
 import pandas as pd
 import joblib
 
+import glob
+import pandas as pd
+
+def load_latest_snapshot():
+    """
+    Loads the most recent purchase snapshot file (.parquet or .csv)
+    so that tests and API both work.
+    """
+    # Look for all snapshot files inside project root or snapshots folder
+    files = glob.glob("*.parquet") + glob.glob("*.csv") + glob.glob("**/*.parquet", recursive=True)
+
+    if not files:
+        raise FileNotFoundError("No snapshot files found for load_latest_snapshot()")
+
+    # Most recent file based on filename timestamp or modification time
+    latest = max(files)
+
+    print(f"[load_latest_snapshot] Loading snapshot: {latest}")
+
+    if latest.endswith(".parquet"):
+        return pd.read_parquet(latest)
+    else:
+        return pd.read_csv(latest)
+
 # ===============================
 # LOAD DATA
 # ===============================
