@@ -1,9 +1,9 @@
-name: Auto Retrain & Publish
+name: Automated Model Retraining
 
 on:
   schedule:
-    - cron: "0 */12 * * *"   # runs every 12 hours
-  workflow_dispatch:          # allow manual run from the UI
+    - cron: "0 */12 * * *"      # 🔁 Runs every 12 hours
+  workflow_dispatch:            # ▶ Allows manual trigger from GitHub UI
 
 jobs:
   retrain:
@@ -28,6 +28,17 @@ jobs:
       run: |
         python product_trend_tracker/retrain_and_publish.py
 
+    # Optional: Save new version into the repo (hot-swap for live API)
+    - name: Commit updated model registry
+      run: |
+        git config user.email "actions@github.com"
+        git config user.name "GitHub Actions"
+
+        git add model_registry latest.txt || true
+        git commit -m "Automated retraining update" || echo "No changes to commit"
+        git push
+
+    # Save artifacts too (backup)
     - name: Upload model registry as artifact
       uses: actions/upload-artifact@v3
       with:
