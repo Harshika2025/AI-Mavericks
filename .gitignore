@@ -1,3 +1,6 @@
-venv/
-venv/
-venv/
+__pycache__/
+*.pyc
+pytest_cache/
+.snapshots_downloaded/
+*.parquet
+model_registry/*tmp
