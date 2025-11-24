@@ -1,4 +1,11 @@
 [
+  "product_trend_tracker/tests/test_api.py::test_feedback",
+  "product_trend_tracker/tests/test_api.py::test_health_check",
+  "product_trend_tracker/tests/test_api.py::test_invalid_k_value",
+  "product_trend_tracker/tests/test_api.py::test_trending_products_custom_k",
+  "product_trend_tracker/tests/test_api.py::test_trending_products_default",
+  "product_trend_tracker/tests/test_pipeline_basic.py::test_basic_groupby_pipeline",
+  "test_pipeline_basic.py::test_basic_pipeline_groupby",
   "tests/test_pipeline_basic.py::test_offline_metrics_file_creation",
   "tests/test_pipeline_basic.py::test_parquet_files_exist",
   "tests/test_pipeline_basic.py::test_safe_mean_valid_values",
