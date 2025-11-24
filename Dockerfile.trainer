@@ -12,6 +12,7 @@ RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --upgrade pip \
     && /opt/venv/bin/pip install -r requirements.txt
 
+
 FROM python:3.11-slim AS runtime
 
 COPY --from=builder /opt/venv /opt/venv
@@ -19,6 +20,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-COPY train_models.py .
+# Copy entire project
+COPY product_trend_tracker/ product_trend_tracker/
+COPY snapshots_downloaded/ snapshots_downloaded/   # if directory exists
+COPY model_registry/ model_registry/               # if directory exists
+
+WORKDIR /app/product_trend_tracker
 
 CMD ["python", "train_models.py"]
