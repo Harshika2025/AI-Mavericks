@@ -4,3 +4,4 @@ pytest_cache/
 .snapshots_downloaded/
 *.parquet
 model_registry/*tmp
+venv/
