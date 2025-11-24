@@ -20,10 +20,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-# Copy entire project
+# Only copy the trainer code folder
 COPY product_trend_tracker/ product_trend_tracker/
-COPY snapshots_downloaded/ snapshots_downloaded/   # if directory exists
-COPY model_registry/ model_registry/               # if directory exists
 
 WORKDIR /app/product_trend_tracker
 
