@@ -40,7 +40,7 @@ jobs:
 
     # Save artifacts too (backup)
     - name: Upload model registry as artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: model_registry
         path: model_registry
